@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>comment</title>
+
+    <style>
+body{
+    margin: 0;
+    padding: 0;
+    background: #000;
+}
+#messages{
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: calc( 100% - 50px );
+    background: #000;
+    overflow-y: auto;
+    padding: 10px;
+    box-sizing: border-box;
+
+}
+#sendMsg{
+    position: fixed;
+    left: 0%;
+    bottom: 0;
+    width: 30%;
+    height: 50px;
+    background: #AAA;
+
+}
+
+#msgTxt{
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: calc( 100% - 100px );
+    padding-left: 10px;
+    box-sizing: border-box;
+}
+#msgBtn{
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 100px;
+    height: 100%;
+}
+.outer  {
+    
+    width: 100%;
+    margin-top: 10px;
+    display: flex;
+}
+
+#inner{
+    padding: 10px;
+    box-sizing: border-box;
+    border-radius: 10px;
+}
+.me{
+    background: #8800FF;
+    color:#fff;
+}
+
+.me span{
+    color:aqua;
+}
+.notMe{
+    background: #fff;
+    color:#000; 
+}
+
+@media (max-width:767px ){
+    #sendMsg{
+    position: fixed;
+    left: 0%;
+    bottom: 0;
+    width: 90%;
+    height: 50px;
+    background: #AAA;
+
+}
+}
+    </style>
+</head>
+<body>
+
+    <div id="messages"></div>
+
+    <div id="sendMsg">
+        <input type="text" id="msgName" placeholder="ENTER YOUR Name...">
+        <input type="text" id="msgTxt" placeholder="ENTER YOUR MSG...">
+        <input type="submit" id="msgBtn" value="Send" onclick="module.sendMsg()">
+    </div>
+
+    <script>
+        module = {}
+    </script>
+   
+     <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+
+  import { getDatabase, ref, set, remove, onChildAdded, onChildRemoved } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+  
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyCl7KisXKemXrwp7voPAhJIqzPXJyLX0-M",
+    authDomain: "comen-ff796.firebaseapp.com",
+    projectId: "comen-ff796",
+    storageBucket: "comen-ff796.appspot.com",
+    messagingSenderId: "429247107061",
+    appId: "1:429247107061:web:9254b57ca7d5108c5edabc"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  //variable
+  var msgName = document.getElementById('msgName')
+  var msgTxt = document.getElementById('msgTxt');
+  var sender;
+  if(sessionStorage.getItem('sender')){
+    sender = sessionStorage.getItem('sender');
+  }else {
+    sender = prompt('PLEASE ENTER TOUR NAME');
+    sessionStorage.setItem('sender', sender);
+  }
+
+  // TO SEND MESSAGES
+  module.sendMsg = function sendMsg(){
+    var msg = msgTxt.value;
+    var timestamp = new Date().getTime();
+
+    set(ref(db, "messages/"+timestamp), {
+        msg : msg,
+        sender : sender
+    })
+
+      // Clear the input fields after sending the message
+      
+        msgTxt.value = "";
+  }
+
+  // TO RECEIVE MESSAGES
+  onChildAdded(ref(db, "messages"), (data)=>{
+   if(data.val().sender == sender){
+    messages.innerHTML += "<div style=justify-content:end class=outer id="+data.key+"><div id=inner class=me><span>You</span> : "+data.val().msg+"<button id=dltMsg onclick=module.dltMsg("+data.key+")>Delete</button></div></div>"
+   
+}else {
+    messages.innerHTML += "<div  class=outer id="+data.key+"><div id=inner class=notMe>"+data.val().sender+" : "+data.val().msg+"</div></div>"
+}
+  })
+
+  //TO DELETE MSG
+  module.dltMsg = function dltMsg(key){
+   remove(ref(db, "messages/"+key));
+  }
+
+  //WHEN MSG IS DELETED
+  onChildRemoved(ref(db,"messages"),(data)=>{
+    var msgBox = document.getElementById(data.key);
+   messages.removeChild(msgBox);
+  })
+</script>
+
+</body>
+</html>
